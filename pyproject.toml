@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cosc520-login-checker"
+version = "0.1.0"
+description = "Login checker: linear, binary, hash table, Bloom and Cuckoo (COSC 520 Assignment 1)"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+plots = ["matplotlib>=3.7"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

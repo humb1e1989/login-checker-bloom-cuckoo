@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+*.log
+.claude/
+# Results (CSV/PNG) are kept in git so the report can be reproduced.
+# Only the small, representative samples under data/samples/ are tracked;
+# large generated datasets (e.g. the 10^7-row file) are not committed.
+data/*
+!data/samples/
+!data/samples/*

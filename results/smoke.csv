@@ -1,0 +1,7 @@
+structure,n,query_count,build_ns,query_total_ns,query_mean_ns,false_positives,false_negatives
+linear_search,100,200,8422.0,219615.0,1098.075,0,0
+binary_search,100,200,1933.0,97825.0,489.125,0,0
+linear_search,1000,200,42182.0,2056393.0,10281.965,0,0
+binary_search,1000,200,2654.0,197723.0,988.615,0,0
+linear_search,10000,200,422705.0,18810665.0,94053.325,0,0
+binary_search,10000,200,11828.0,232935.0,1164.675,0,0
