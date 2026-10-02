@@ -36,15 +36,16 @@ python -m unittest discover -s tests -v
 
 ## Quick demo
 
-```python
-from login_checker import BloomFilter, CuckooFilter, HashTable
-
-table, bloom = HashTable(), BloomFilter(expected_items=1000, false_positive_rate=0.01)
-cuckoo = CuckooFilter(capacity=1000)
-for name in ("alice", "bob"):
-    table.add(name); bloom.add(name); cuckoo.add(name)
-print(table.contains("alice"), bloom.contains("carol"), cuckoo.contains("bob"))
+```bash
+python3 demo.py
 ```
+
+This builds all five structures from the same three usernames and prints
+each one's answer for a stored name and an absent one (`demo.py` at the
+repository root). Note: this must run *inside* a Python interpreter, not
+pasted directly at the shell prompt -- either `python3 demo.py` as above,
+or `python3` to open an interactive session first if you want to try the
+classes line by line.
 
 ## Reproduce the experiments
 
