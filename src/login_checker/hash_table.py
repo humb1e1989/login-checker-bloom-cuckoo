@@ -29,11 +29,19 @@ class HashTable:
         self._max_load = max_load
 
     def _index(self, value: str, bucket_count: int) -> int:
-        """Return the bucket index of value in a table of bucket_count buckets."""
+        """Hash value and reduce it to a valid bucket slot.
+
+        Input: username string, number of buckets in the table being
+        indexed. Output: integer bucket index in [0, bucket_count).
+        """
         return hash_string(value) % bucket_count
 
     def _resize(self) -> None:
-        """Double the bucket count and re-insert every stored username."""
+        """Double the bucket count and re-insert every stored username.
+
+        Input: none (reads self._buckets). Output: none; replaces
+        self._buckets with a new, larger array holding the same values.
+        """
         new_count = len(self._buckets) * 2
         new_buckets: list[list[str] | None] = [None] * new_count
         for chain in self._buckets:
@@ -96,9 +104,9 @@ class HashTable:
 
     @property
     def bucket_count(self) -> int:
-        """Return the current number of buckets."""
+        """Return the current number of buckets (input: none)."""
         return len(self._buckets)
 
     def __len__(self) -> int:
-        """Return the number of unique stored usernames."""
+        """Return the number of unique stored usernames (input: none)."""
         return self._size

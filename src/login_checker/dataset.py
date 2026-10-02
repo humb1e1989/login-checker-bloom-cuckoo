@@ -8,7 +8,14 @@ from pathlib import Path
 
 
 def generate_usernames(count: int, prefix: str = "user") -> list[str]:
-    """Return count unique usernames in lexicographically sorted order."""
+    """Generate a deterministic, zero-padded, pre-sorted username list.
+
+    Input: count (number of usernames, >= 0) and prefix (default "user").
+    Output: a list of `count` unique strings "{prefix}_{index}", index
+    zero-padded to a fixed width so the list is already in ascending
+    (lexicographic == numeric) order. Calling this twice with the same
+    arguments always returns the same list.
+    """
     if count < 0:
         raise ValueError("count must be non-negative")
     width = max(1, len(str(max(0, count - 1))))
@@ -18,7 +25,15 @@ def generate_usernames(count: int, prefix: str = "user") -> list[str]:
 def generate_queries(
     usernames: list[str], query_count: int, hit_rate: float, seed: int
 ) -> tuple[list[str], list[bool]]:
-    """Create shuffled hit/miss queries and their exact expected results."""
+    """Create shuffled hit/miss queries and their exact expected results.
+
+    Input: usernames (the stored set to sample hits from), query_count
+    (>= 0), hit_rate (fraction of queries that are hits, in [0, 1]), and
+    seed (makes the sample, the miss strings, and the shuffle order
+    reproducible). Output: (queries, expected) -- a shuffled list of
+    query strings and the matching list of ground-truth booleans (True =
+    the query is one of `usernames`).
+    """
     if query_count < 0:
         raise ValueError("query_count must be non-negative")
     if not 0.0 <= hit_rate <= 1.0:
@@ -53,7 +68,12 @@ def write_dataset(path: Path, count: int, prefix: str = "user") -> None:
 
 
 def main() -> None:
-    """Command-line entry point: python -m login_checker.dataset --count N."""
+    """Command-line entry point: python -m login_checker.dataset --count N.
+
+    Input: none (reads --count, --prefix, --output from the command
+    line). Output: none; writes the file via write_dataset and prints a
+    confirmation line.
+    """
     parser = argparse.ArgumentParser(description="Write a synthetic username file.")
     parser.add_argument("--count", type=int, required=True)
     parser.add_argument("--prefix", default="user")

@@ -64,7 +64,12 @@ class CuckooFilter:
         self.insert_failures = 0  # number of add() calls that returned False
 
     def _fingerprint_and_index(self, value: str) -> tuple[int, int]:
-        """Return (non-zero fingerprint, primary bucket index) for value."""
+        """Derive value's fingerprint and its primary bucket index.
+
+        Input: username string. Output: (fingerprint, i1) -- fingerprint
+        is a non-zero integer of fingerprint_bits bits (0 is reserved to
+        mean "empty slot"), i1 is the bucket index in [0, bucket_count).
+        """
         h = hash_string(value, self.seed)
         fingerprint = (h >> 32) & self._mask
         if fingerprint == 0:
@@ -72,11 +77,23 @@ class CuckooFilter:
         return fingerprint, h % self.bucket_count
 
     def _alt_index(self, index: int, fingerprint: int) -> int:
-        """Return the other candidate bucket of a fingerprint stored at index."""
+        """Compute the other candidate bucket of a fingerprint at index.
+
+        Input: index (a bucket index the fingerprint is known to occupy,
+        either i1 or i2) and fingerprint. Output: the other bucket index.
+        An involution: calling this again on its own result and the same
+        fingerprint returns the original index, so a value can be moved
+        knowing only its current bucket and fingerprint.
+        """
         return (derive_hash(fingerprint, self.seed) - index) % self.bucket_count
 
     def _find_slot(self, index: int, target: int) -> int:
-        """Return the slot position in bucket index holding target, or -1."""
+        """Scan one bucket for a matching fingerprint value.
+
+        Input: index (bucket to scan) and target (fingerprint to find, or
+        0 to find an empty slot). Output: the absolute slot position if
+        found, else -1.
+        """
         start = index * self.bucket_size
         slots = self._slots
         for position in range(start, start + self.bucket_size):
@@ -152,19 +169,19 @@ class CuckooFilter:
 
     @property
     def load_factor(self) -> float:
-        """Return the fraction of slots that currently hold a fingerprint."""
+        """Return the fraction of slots that currently hold a fingerprint (input: none)."""
         return self._size / (self.bucket_count * self.bucket_size)
 
     @property
     def size_bytes(self) -> int:
-        """Return the bytes the Python array actually uses (8/16/32-bit cells)."""
+        """Return the bytes the Python array actually uses (input: none; 16/32-bit cells)."""
         return self._slots.itemsize * len(self._slots)
 
     @property
     def packed_size_bytes(self) -> int:
-        """Return the bytes a bit-packed layout would need: slots * f / 8."""
+        """Return the bytes a bit-packed layout would need (input: none): slots * f / 8."""
         return math.ceil(len(self._slots) * self.fingerprint_bits / 8)
 
     def __len__(self) -> int:
-        """Return the number of stored fingerprints."""
+        """Return the number of stored fingerprints (input: none)."""
         return self._size

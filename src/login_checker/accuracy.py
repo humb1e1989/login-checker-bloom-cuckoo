@@ -31,7 +31,13 @@ def measure_false_positive_rate(store: object, probes: int) -> float:
 
 
 def bloom_sweep(n: int, probes: int) -> list[dict[str, object]]:
-    """Sweep the Bloom target rate p; compare measured and predicted rates."""
+    """Build a Bloom filter at several target rates and measure each one.
+
+    Input: n (usernames to insert), probes (unseen strings to test per
+    filter). Output: one result row per target rate p, each with the
+    bits-per-item the formula chose, the measured false-positive rate,
+    and the rate the formula predicts.
+    """
     values = generate_usernames(n)
     rows = []
     for target in (0.1, 0.05, 0.02, 0.01, 0.005, 0.001, 0.0001):
@@ -52,7 +58,14 @@ def bloom_sweep(n: int, probes: int) -> list[dict[str, object]]:
 
 
 def cuckoo_sweep(n: int, probes: int, bucket_size: int = 4) -> list[dict[str, object]]:
-    """Sweep the fingerprint length f; compare measured and predicted rates."""
+    """Build a Cuckoo filter at several fingerprint lengths and measure each.
+
+    Input: n (usernames to insert), probes (unseen strings to test per
+    filter), bucket_size (slots per bucket, fixed across the sweep).
+    Output: one result row per fingerprint length f, each with the
+    bits-per-item of a bit-packed layout, the measured false-positive
+    rate, and the rate Fan et al.'s formula predicts.
+    """
     values = generate_usernames(n)
     rows = []
     for bits in (4, 6, 8, 10, 12, 14, 16):
@@ -75,7 +88,13 @@ def cuckoo_sweep(n: int, probes: int, bucket_size: int = 4) -> list[dict[str, ob
 
 
 def cuckoo_occupancy(slots: int) -> list[dict[str, object]]:
-    """Insert until the first failure; report the achieved load factor."""
+    """Insert usernames until the first failed insertion, for four bucket sizes.
+
+    Input: slots (number of usernames to attempt to insert; also sizes
+    each filter's capacity). Output: one result row per bucket size, each
+    with the load factor (occupied slots / total slots) reached right
+    before the first add() returned False.
+    """
     rows = []
     for bucket_size in (1, 2, 4, 8):
         cuckoo = CuckooFilter(slots, bucket_size=bucket_size, max_load=1.0)
@@ -94,7 +113,11 @@ def cuckoo_occupancy(slots: int) -> list[dict[str, object]]:
 
 
 def main() -> None:
-    """Run all accuracy experiments and write them to one CSV."""
+    """Run all accuracy experiments and write them to one CSV.
+
+    Input: command-line flags --n, --probes, --output (see parser below).
+    Output: none; writes a CSV to --output and prints every row.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--n", type=int, default=100_000)
     parser.add_argument("--probes", type=int, default=200_000)

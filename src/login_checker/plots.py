@@ -38,7 +38,12 @@ def read_rows(paths: list[Path]) -> list[dict[str, str]]:
 
 
 def series(rows: list[dict[str, str]], name: str, metric: str, scale: float = 1.0):
-    """Return (sizes, values) for one structure, sorted by n."""
+    """Extract one structure's (n, metric) points, sorted by n.
+
+    Input: parsed CSV rows, the structure name to filter on, the metric
+    column to read, and an optional divisor (e.g. 1e9 for ns -> s).
+    Output: (sizes, values), two parallel lists ready to plot.
+    """
     points = sorted(
         (int(r["n"]), float(r[metric]) / scale) for r in rows if r["structure"] == name
     )
@@ -46,7 +51,11 @@ def series(rows: list[dict[str, str]], name: str, metric: str, scale: float = 1.
 
 
 def style_axes(ax, xlabel: str, ylabel: str, title: str) -> None:
-    """Apply the shared recessive-grid style to a subplot."""
+    """Apply the shared recessive-grid style to a subplot.
+
+    Input: a matplotlib Axes and its axis/title text. Output: none;
+    mutates ax in place (labels, muted grid, hidden top/right spines).
+    """
     ax.set_xlabel(xlabel, color=MUTED)
     ax.set_ylabel(ylabel, color=MUTED)
     ax.set_title(title, color=INK, fontsize=10, loc="left")
@@ -58,7 +67,12 @@ def style_axes(ax, xlabel: str, ylabel: str, title: str) -> None:
 
 
 def line_chart(ax, rows, metric: str, scale: float, ylabel: str, title: str) -> None:
-    """Draw one log-log line per structure for the given metric."""
+    """Draw one log-log line per structure for the given metric.
+
+    Input: a matplotlib Axes, parsed CSV rows, the metric/scale/labels to
+    plot. Output: none; draws one styled line per structure present in
+    rows onto ax (structures missing from rows are simply skipped).
+    """
     for name, (color, marker, label) in STYLE.items():
         xs, ys = series(rows, name, metric, scale)
         if xs:
@@ -70,7 +84,11 @@ def line_chart(ax, rows, metric: str, scale: float, ylabel: str, title: str) -> 
 
 
 def save(fig, path: Path) -> None:
-    """Save a figure as PNG at report resolution and close it."""
+    """Save a figure as PNG at report resolution and close it.
+
+    Input: a matplotlib Figure and the output path. Output: none; writes
+    path and frees the figure's memory (closes it) afterward.
+    """
     fig.tight_layout()
     fig.savefig(path, dpi=200)
     plt.close(fig)
@@ -78,7 +96,11 @@ def save(fig, path: Path) -> None:
 
 
 def plot_query_time(rows, out: Path) -> None:
-    """Mean query time vs n, with hit-only and miss-only panels."""
+    """Plot mean query time vs n, with hit-only and miss-only panels.
+
+    Input: parsed benchmark CSV rows, the output directory. Output: none;
+    writes out/query_time.png (three side-by-side log-log panels).
+    """
     fig, axes = plt.subplots(1, 3, figsize=(11, 3.4), sharey=True)
     for ax, metric, title in zip(
         axes,
@@ -91,7 +113,11 @@ def plot_query_time(rows, out: Path) -> None:
 
 
 def plot_build_time(rows, out: Path) -> None:
-    """Total build time vs n."""
+    """Plot total build time vs n.
+
+    Input: parsed benchmark CSV rows, the output directory. Output: none;
+    writes out/build_time.png (one log-log panel).
+    """
     fig, ax = plt.subplots(figsize=(5, 3.4))
     line_chart(ax, rows, "build_ns", 1e9, "Build time (s)", "Build time")
     ax.legend(fontsize=7, frameon=False)
@@ -99,7 +125,13 @@ def plot_build_time(rows, out: Path) -> None:
 
 
 def plot_memory(rows, out: Path) -> None:
-    """Bytes per stored login vs n (structure plus retained strings)."""
+    """Plot bytes per stored login vs n (structure plus retained strings).
+
+    Input: parsed benchmark CSV rows, the output directory. Output: none;
+    writes out/memory.png. Exact structures' totals add back the
+    retained-string bytes that tracemalloc attributes to `values`, not to
+    the structure itself (see benchmark.measure_memory).
+    """
     fig, ax = plt.subplots(figsize=(5, 3.4))
     for name, (color, marker, label) in STYLE.items():
         pts = sorted(
@@ -117,7 +149,12 @@ def plot_memory(rows, out: Path) -> None:
 
 
 def plot_false_positives(acc_rows, out: Path) -> None:
-    """Measured vs predicted false-positive rate against bits per item."""
+    """Plot measured vs predicted false-positive rate against bits per item.
+
+    Input: parsed accuracy.py CSV rows, the output directory. Output:
+    none; writes out/false_positives.png, one measured + one dashed
+    theoretical line per filter.
+    """
     fig, ax = plt.subplots(figsize=(5, 3.4))
     for name, key in (("bloom_filter", "bloom_filter"), ("cuckoo_filter", "cuckoo_filter")):
         color, marker, label = STYLE[key]
@@ -134,7 +171,12 @@ def plot_false_positives(acc_rows, out: Path) -> None:
 
 
 def main() -> None:
-    """Read the CSV files and write every figure."""
+    """Read the CSV files and write every figure.
+
+    Input: command-line flag --results (directory holding the CSVs and
+    where the PNGs are written; default "results"). Output: none; skips
+    a figure if its CSV inputs are not found rather than erroring.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results", type=Path, default=Path("results"))
     args = parser.parse_args()

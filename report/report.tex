@@ -1,25 +1,34 @@
-% COSC 520 Assignment 1 -- The Login Checker Problem
-%
-% HOW TO COMPILE (Overleaf):
-%   1. On Overleaf, create a new project from the "Association for Computing
-%      Machinery (ACM) - Small Standard Format Template".
-%   2. Delete the template's sample .tex/.bib files.
-%   3. Upload this file as main.tex, upload references.bib, and upload the
-%      four PNG files from report/figures/ into a "figures" folder.
-%   4. Recompile (pdfLaTeX + biber/bibtex).
-%   5. Fill in the two [FILL IN] placeholders (GitHub + dataset links) and
-%      the author name below before submitting.
-%
-% ACM copyright/journal boilerplate is intentionally suppressed below, per
-% the assignment instructions.
+%% This report is built on ACM's official acmart template sample file
+%% `acmsmall-submission.tex' (generated via docstrip from samples.dtx,
+%% options `all,acmsmall,submission'), taken from the "Association for
+%% Computing Machinery (ACM) - Small Standard Format Template" project
+%% on Overleaf. Per that file's own licensing note, a modified version
+%% must use a different filename; this file is named report.tex.
+%%
+%% HOW TO COMPILE (Overleaf):
+%%   1. In the ACM Small Standard Format Template project, delete the
+%%      sample main .tex file and the sample .bib file.
+%%   2. Upload this file as the project's main .tex file, upload
+%%      references.bib, and upload the four PNGs from report/figures/
+%%      into a "figures" folder in the project.
+%%   3. Recompile (pdfLaTeX + bibtex). References may show as [?] on
+%%      the first compile; click "Recompile" again to resolve them.
+%%   4. One placeholder is intentionally left in the \acks section
+%%      (GenAI disclosure): add any classmate/TA/web consultation
+%%      there before submitting.
+%%
+%% The class options below differ from the template's own default
+%% (`anonymous,review`) because that option is for a double-anonymous
+%% conference submission (hides the author, adds line numbers), which
+%% does not apply to a signed course report. `nonacm=true`, together
+%% with \setcopyright{none} and \settopmatter{...} below, is the
+%% standard acmart way to remove the ACM rights/journal/reference-
+%% format block, per the assignment's explicit instruction to do so.
+\documentclass[acmsmall,screen,nonacm=true]{acmart}
 
-\documentclass[acmsmall,screen=true,nonacm=true]{acmart}
-\usepackage{booktabs}
+\AtBeginDocument{%
+  \providecommand\BibTeX{{Bib\TeX}}}
 
-% nonacm=true (above) plus the two lines below are the standard acmart way
-% to suppress the ACM copyright/permission block, DOI/ISBN, and the
-% "ACM Reference Format" block, per the assignment's instruction to remove
-% ACM/journal/copyright information.
 \setcopyright{none}
 \settopmatter{printacmref=false, printccs=false}
 
@@ -28,7 +37,7 @@
 \title{The Login Checker Problem: Exact and Probabilistic Membership
   Structures at Scale}
 
-\author{[FILL IN: Your Name]}
+\author{Iverson (Shuchen) Yuan}
 \affiliation{%
   \institution{University of British Columbia Okanagan, COSC 520}
   \city{Kelowna}
@@ -37,7 +46,7 @@
 }
 \email{shelleybagshaw77@gmail.com}
 
-\renewcommand{\shortauthors}{[FILL IN: Your Name]}
+\renewcommand{\shortauthors}{Yuan}
 
 \begin{abstract}
 Checking whether a new username collides with an existing one is a
@@ -54,6 +63,9 @@ non-bit-packed Cuckoo implementation is \emph{not} more space-efficient than
 a Bloom filter at a matched $1\%$ false-positive rate, contrary to the
 folklore claim that Cuckoo filters always win below $3\%$.
 \end{abstract}
+
+\keywords{membership queries, hash tables, Bloom filters, Cuckoo filters,
+  login systems, probabilistic data structures}
 
 \maketitle
 
@@ -334,9 +346,10 @@ a pure, seedless function of $n$ (no stored randomness to lose), we publish
 the generator itself plus two representative samples
 (\texttt{data/samples/usernames\_1000.txt},
 \texttt{data/samples/usernames\_100000.txt}) in the GitHub repository at
-\textbf{[FILL IN: dataset/repo link]}, together with the one-line command
-that regenerates any size exactly, including the full $n=10^7$ file used in
-this report (\texttt{python -m login\_checker.dataset --count \textit{n}}).
+\url{https://github.com/humb1e1989/login-checker-bloom-cuckoo/tree/main/data/samples},
+together with the one-line command that regenerates any size exactly,
+including the full $n=10^7$ file used in this report
+(\texttt{python -m login\_checker.dataset --count \textit{n}}).
 
 \textbf{Queries.} For each $n$, \texttt{generate\_queries} builds
 10{,}000 queries seeded by $n$: 50\% \emph{hits}, drawn uniformly at random
@@ -435,6 +448,12 @@ for the Cuckoo filter and one list scan for the hash table.
 \caption{Mean time per query vs.\ $n$ (log-log), mixed / hit-only /
 miss-only. Linear search's query count is capped above $n=10^5$
 (Section~\ref{sec:methodology}).}
+\Description{Three log-log line charts of mean query time in
+nanoseconds against number of stored logins, for the mixed, hit-only,
+and miss-only workloads. Linear search rises linearly across all three
+panels; binary search rises logarithmically; the hash table, Bloom
+filter, and Cuckoo filter are flat lines, with the hash table lowest,
+then the Cuckoo filter, then the Bloom filter.}
 \label{fig:query}
 \end{figure}
 
@@ -455,6 +474,11 @@ the hash table's bucket/list overhead.
 \begin{figure}[t]
 \includegraphics[width=\linewidth]{figures/build_time.png}
 \caption{Total build time vs.\ $n$ (log-log).}
+\Description{A log-log line chart of total build time in seconds
+against number of stored logins. Binary search is lowest by several
+orders of magnitude; linear search is next; the hash table, Bloom
+filter, and Cuckoo filter rise together at similar, steeper slopes,
+with the hash table slightly above the two filters.}
 \label{fig:build}
 \end{figure}
 
@@ -462,6 +486,11 @@ the hash table's bucket/list overhead.
 \includegraphics[width=\linewidth]{figures/memory.png}
 \caption{Bytes per stored login vs.\ $n$ (log-log). Exact structures'
 figures include the retained username strings.}
+\Description{A log-log line chart of bytes per stored login against
+number of stored logins. Linear search and binary search sit near 60
+bytes per login, the hash table near 120--130, and the Bloom and
+Cuckoo filters sit an order of magnitude lower, near 1.2 and 2.3 bytes
+per login respectively, all roughly flat as n grows.}
 \label{fig:memory}
 \end{figure}
 
@@ -477,6 +506,11 @@ observed for either filter, at any $n$, in any experiment.
 \includegraphics[width=\linewidth]{figures/false_positives.png}
 \caption{Measured vs.\ predicted false-positive rate against bits per
 stored login, $n=10^5$, 200{,}000 probes per point.}
+\Description{A log-linear chart of false-positive rate against bits
+per stored login, for the Bloom filter and the Cuckoo filter, each
+shown as a measured line and a dashed theoretical-formula line. The
+measured and theoretical lines for each filter closely overlap across
+three orders of magnitude in false-positive rate.}
 \label{fig:fp}
 \end{figure}
 
@@ -624,23 +658,26 @@ non-bit-packed implementation -- a reminder that the crossover point
 depends on the achievable load factor and on implementation-level packing
 decisions, not on the filter family alone.
 
-\section*{Acknowledgment and GenAI Disclosure}
+%% Per the template's own guidance, acknowledgment-type content is set
+%% in the "acks" environment rather than a numbered/unnumbered
+%% \section, so that it is identified consistently in the article
+%% metadata.
+\begin{acks}
+\textbf{GenAI disclosure.} Claude Code (Claude Sonnet 5, Anthropic) was
+used as an assistant during this assignment. The starter repository
+(reference interfaces, linear and binary search, the dataset
+generator's core functions, and two hash helpers) was provided by the
+course. The hash table, Bloom filter, and Cuckoo filter
+implementations, the extended benchmark/accuracy/plotting scripts, and
+their unit tests were drafted by Claude Code from the assignment
+specification and the starter interfaces, then reviewed, run, and
+(where noted above, e.g.\ the FNV mixing fix) debugged against
+measured results by the author. [FILL IN: add anything else you
+changed, or any classmate/TA/web consultation, here.]
 
-Claude Code (Claude Sonnet 5, Anthropic) was used as an assistant during
-this assignment. The starter repository (reference interfaces, linear and
-binary search, the dataset generator's core functions, and two hash
-helpers) was provided by the course. The hash table, Bloom filter, and
-Cuckoo filter implementations, the extended benchmark/accuracy/plotting
-scripts, and their unit tests were drafted by Claude Code from the
-assignment specification and the starter interfaces, then reviewed,
-run, and (where noted above, e.g.\ the FNV mixing fix) debugged against
-measured results by the author. See \texttt{AI\_CONTRIBUTION\_LOG.md} in
-the repository for the file-by-file breakdown and the author's own
-verification notes. [FILL IN: add anything else you changed, or any
-classmate/TA/web consultation, here.]
-
-\textbf{Code:} [FILL IN: GitHub repository link] \\
-\textbf{Dataset generator and sample:} [FILL IN: dataset link]
+\textbf{Code:} \url{https://github.com/humb1e1989/login-checker-bloom-cuckoo} \\
+\textbf{Dataset generator and sample:} \url{https://github.com/humb1e1989/login-checker-bloom-cuckoo/tree/main/data/samples}
+\end{acks}
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}

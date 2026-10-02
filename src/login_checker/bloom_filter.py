@@ -38,7 +38,12 @@ class BloomFilter:
         self._items_added = 0
 
     def _positions(self, value: str) -> list[int]:
-        """Return the k bit positions for value using double hashing."""
+        """Derive the k bit positions to set/check for value.
+
+        Input: username string. Output: list of k integer positions in
+        [0, bit_count), computed by double hashing (two base hashes
+        combined, rather than k independent hash functions).
+        """
         h1 = hash_string(value)
         h2 = derive_hash(h1, 1) | 1  # odd step avoids degenerate cycles
         m = self.bit_count
@@ -67,15 +72,19 @@ class BloomFilter:
         return True
 
     def estimated_false_positive_rate(self) -> float:
-        """Return (1 - e^(-kn/m))^k for the number of items added so far."""
+        """Return (1 - e^(-kn/m))^k for the number of items added so far.
+
+        Input: none (uses self._items_added). Output: predicted false-positive
+        probability in [0, 1].
+        """
         fill = 1.0 - math.exp(-self.hash_count * self._items_added / self.bit_count)
         return fill**self.hash_count
 
     @property
     def size_bytes(self) -> int:
-        """Return the size of the bit array in bytes."""
+        """Return the size of the bit array in bytes (input: none)."""
         return len(self._bits)
 
     def __len__(self) -> int:
-        """Return the number of add() calls (Bloom filters cannot dedupe)."""
+        """Return the number of add() calls (input: none; cannot dedupe)."""
         return self._items_added

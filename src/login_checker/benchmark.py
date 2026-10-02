@@ -31,6 +31,10 @@ EXACT_STRUCTURES = {"linear_search", "binary_search", "hash_table"}
 
 
 def _build_linear(values: list[str]) -> LinearSearchStore:
+    """Insert every value into a fresh LinearSearchStore, one at a time.
+
+    Input: usernames to store. Output: the populated store.
+    """
     store = LinearSearchStore()
     for value in values:
         store.add(value)
@@ -38,19 +42,34 @@ def _build_linear(values: list[str]) -> LinearSearchStore:
 
 
 def _build_binary(values: list[str]) -> BinarySearchStore:
-    # The synthetic generator already returns lexicographically sorted values,
-    # so this build step is a copy and does not include sorting cost.
+    """Wrap an already-sorted username list in a BinarySearchStore.
+
+    Input: usernames, already sorted (the generator guarantees this).
+    Output: the populated store. This is a single O(n) copy, not n
+    incremental inserts, so sorting cost is not included (see
+    BinarySearchStore.add's O(n^2) warning in its own docstring).
+    """
     return BinarySearchStore(values)
 
 
 def _build_hash_table(values: list[str]) -> HashTable:
-    table = HashTable()  # starts at 16 buckets: resizing cost is in build time
+    """Insert every value into a fresh HashTable, one at a time.
+
+    Input: usernames to store. Output: the populated table, starting from
+    16 buckets, so any resize passes happen -- and are timed -- here.
+    """
+    table = HashTable()
     for value in values:
         table.add(value)
     return table
 
 
 def _build_bloom(values: list[str]) -> BloomFilter:
+    """Size a Bloom filter for len(values) and insert every value.
+
+    Input: usernames to store. Output: the populated filter, sized for
+    the module-level BLOOM_FALSE_POSITIVE_RATE target.
+    """
     bloom = BloomFilter(len(values), BLOOM_FALSE_POSITIVE_RATE)
     for value in values:
         bloom.add(value)
@@ -58,6 +77,11 @@ def _build_bloom(values: list[str]) -> BloomFilter:
 
 
 def _build_cuckoo(values: list[str]) -> CuckooFilter:
+    """Size a Cuckoo filter for len(values) and insert every value.
+
+    Input: usernames to store. Output: the populated filter, using the
+    module-level CUCKOO_FINGERPRINT_BITS fingerprint length.
+    """
     cuckoo = CuckooFilter(len(values), fingerprint_bits=CUCKOO_FINGERPRINT_BITS)
     for value in values:
         cuckoo.add(value)
@@ -87,7 +111,12 @@ def query_budget(name: str, size: int, query_count: int) -> int:
 
 
 def _time_queries(store: object, queries: list[str]) -> tuple[int, list[bool]]:
-    """Return (elapsed ns, results) for querying every value in queries."""
+    """Time a batch of contains() calls against one store.
+
+    Input: a populated store and the list of queries to run against it.
+    Output: (elapsed_ns, results) -- total wall-clock time for every call
+    plus each call's boolean result, in the same order as queries.
+    """
     start = time.perf_counter_ns()
     results = [store.contains(value) for value in queries]  # type: ignore[attr-defined]
     return time.perf_counter_ns() - start, results
@@ -157,7 +186,10 @@ def measure_memory(name: str, factory: Factory, values: list[str]) -> int:
 
 
 def string_payload_bytes(values: list[str]) -> int:
-    """Return the bytes taken by the string objects an exact structure keeps."""
+    """Return the bytes taken by the string objects an exact structure keeps.
+
+    Input: the username list. Output: sum of sys.getsizeof() over all of them.
+    """
     return sum(sys.getsizeof(value) for value in values)
 
 
@@ -227,7 +259,12 @@ def benchmark(
 
 
 def parse_args() -> argparse.Namespace:
-    """Read benchmark options from the command line."""
+    """Read benchmark options from the command line.
+
+    Input: none (reads sys.argv). Output: a Namespace with sizes,
+    queries, trials, structures, no_memory, and output (see each
+    --flag's help text below for its meaning and default).
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sizes", nargs="+", type=int, required=True)
     parser.add_argument("--queries", type=int, default=10_000)
@@ -245,7 +282,11 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    """Execute the configured benchmark."""
+    """Execute the configured benchmark.
+
+    Input: none (parses the command line via parse_args). Output: none;
+    runs benchmark() with those options, which writes the CSV.
+    """
     args = parse_args()
     benchmark(
         args.sizes,
