@@ -11,14 +11,17 @@ import matplotlib
 matplotlib.use("Agg")  # render to files; no display needed
 import matplotlib.pyplot as plt  # noqa: E402
 
-# Categorical slots 1-5 of the validated palette, plus a marker per structure
-# so identity never depends on color alone.
+# Categorical slots 1-5 of the validated palette, plus a marker AND a
+# linestyle per structure, so identity never depends on color alone --
+# including when two structures' curves fall on top of each other (e.g.
+# linear_search and binary_search have nearly identical memory per
+# login; without a linestyle difference one line fully hides the other).
 STYLE = {
-    "linear_search": ("#2a78d6", "o", "Linear search"),
-    "binary_search": ("#eb6834", "s", "Binary search"),
-    "hash_table": ("#1baf7a", "^", "Hash table"),
-    "bloom_filter": ("#eda100", "D", "Bloom filter"),
-    "cuckoo_filter": ("#e87ba4", "v", "Cuckoo filter"),
+    "linear_search": ("#2a78d6", "o", "-", "Linear search"),
+    "binary_search": ("#eb6834", "s", "--", "Binary search"),
+    "hash_table": ("#1baf7a", "^", "-.", "Hash table"),
+    "bloom_filter": ("#eda100", "D", ":", "Bloom filter"),
+    "cuckoo_filter": ("#e87ba4", "v", (0, (3, 1, 1, 1)), "Cuckoo filter"),
 }
 INK = "#0b0b0b"
 MUTED = "#52514e"
@@ -73,10 +76,11 @@ def line_chart(ax, rows, metric: str, scale: float, ylabel: str, title: str) -> 
     plot. Output: none; draws one styled line per structure present in
     rows onto ax (structures missing from rows are simply skipped).
     """
-    for name, (color, marker, label) in STYLE.items():
+    for name, (color, marker, linestyle, label) in STYLE.items():
         xs, ys = series(rows, name, metric, scale)
         if xs:
-            ax.plot(xs, ys, color=color, marker=marker, markersize=5, linewidth=1.6,
+            ax.plot(xs, ys, color=color, marker=marker, linestyle=linestyle,
+                    markersize=5, linewidth=1.6,
                     markeredgecolor="#fcfcfb", markeredgewidth=0.8, label=label)
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -133,13 +137,14 @@ def plot_memory(rows, out: Path) -> None:
     the structure itself (see benchmark.measure_memory).
     """
     fig, ax = plt.subplots(figsize=(5, 3.4))
-    for name, (color, marker, label) in STYLE.items():
+    for name, (color, marker, linestyle, label) in STYLE.items():
         pts = sorted(
             (int(r["n"]), (float(r["memory_bytes"]) + float(r["string_payload_bytes"])) / int(r["n"]))
             for r in rows if r["structure"] == name and float(r["memory_bytes"]) > 0
         )
         if pts:
-            ax.plot(*zip(*pts), color=color, marker=marker, markersize=5, linewidth=1.6,
+            ax.plot(*zip(*pts), color=color, marker=marker, linestyle=linestyle,
+                    markersize=5, linewidth=1.6,
                     markeredgecolor="#fcfcfb", markeredgewidth=0.8, label=label)
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -157,11 +162,12 @@ def plot_false_positives(acc_rows, out: Path) -> None:
     """
     fig, ax = plt.subplots(figsize=(5, 3.4))
     for name, key in (("bloom_filter", "bloom_filter"), ("cuckoo_filter", "cuckoo_filter")):
-        color, marker, label = STYLE[key]
+        color, marker, linestyle, label = STYLE[key]
         pts = [r for r in acc_rows if r["experiment"] == "fp_sweep" and r["structure"] == name]
         xs = [float(r["bits_per_item"]) for r in pts]
         ax.plot(xs, [float(r["measured_fp"]) for r in pts], color=color, marker=marker,
-                markersize=5, linewidth=1.6, markeredgecolor="#fcfcfb", label=f"{label} (measured)")
+                linestyle=linestyle, markersize=5, linewidth=1.6,
+                markeredgecolor="#fcfcfb", label=f"{label} (measured)")
         ax.plot(xs, [float(r["theory_fp"]) for r in pts], color=color, linestyle="--",
                 linewidth=1.0, label=f"{label} (theory)")
     ax.set_yscale("log")

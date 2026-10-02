@@ -469,7 +469,13 @@ Bloom filter and Cuckoo filter use an order of magnitude less memory than
 any exact structure, because they never store the strings themselves --
 they use $\approx$1.2 and $\approx$2.3 bytes/login respectively, versus
 $\approx$60 (array + string) for binary search and $\approx$120--130 for
-the hash table's bucket/list overhead.
+the hash table's bucket/list overhead. Linear search's curve lies almost
+exactly on top of binary search's (within 1 byte/login at every tested
+$n$; both are one Python list of references to the same strings, and
+sortedness does not change that), so the two lines are visually
+indistinguishable without a linestyle difference; Figure~\ref{fig:memory}
+therefore encodes each structure in both color and line pattern, not
+color alone, following standard accessible-chart practice.
 
 \begin{figure}[t]
 \includegraphics[width=\linewidth]{figures/build_time.png}
@@ -487,10 +493,12 @@ with the hash table slightly above the two filters.}
 \caption{Bytes per stored login vs.\ $n$ (log-log). Exact structures'
 figures include the retained username strings.}
 \Description{A log-log line chart of bytes per stored login against
-number of stored logins. Linear search and binary search sit near 60
-bytes per login, the hash table near 120--130, and the Bloom and
-Cuckoo filters sit an order of magnitude lower, near 1.2 and 2.3 bytes
-per login respectively, all roughly flat as n grows.}
+number of stored logins. Linear search (solid) and binary search
+(dashed) sit near 60 bytes per login and overlap almost exactly, the
+hash table (dash-dot) sits near 120--130, and the Bloom filter
+(dotted) and Cuckoo filter (dash-dot-dot) sit an order of magnitude
+lower, near 1.2 and 2.3 bytes per login respectively, all roughly flat
+as n grows.}
 \label{fig:memory}
 \end{figure}
 
